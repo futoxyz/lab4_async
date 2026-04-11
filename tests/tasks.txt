@@ -1,0 +1,6 @@
+id_1 Freeze
+id_2 Stop
+id_5 Delete
+id_7 Refresh the page
+id_128 Update
+id Start
