@@ -1,10 +1,16 @@
-from src.handlers import TaskHandler
+from typing import Protocol, runtime_checkable
 from src.queue import TaskQueue
+from src.task import Task
 import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='taskexec.log', level=logging.INFO)
+
+@runtime_checkable
+class TaskHandler(Protocol):
+    async def handle(self, task: Task):
+        ...
 
 
 class TaskExecutor:

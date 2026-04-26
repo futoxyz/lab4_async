@@ -1,4 +1,3 @@
-from typing import Protocol, runtime_checkable
 import asyncio
 from random import randint
 from src.task import Task
@@ -6,11 +5,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='taskexec.log', level=logging.INFO)
-
-@runtime_checkable
-class TaskHandler(Protocol):
-    async def handle(self, task: Task):
-        ...
 
 class APIHandler:
     async def handle(self, task: Task):
