@@ -1,6 +1,5 @@
 from pytest import mark
 from random import randint, seed
-from src.task import Task
 from src.queue import TaskQueue
 from src.source import RandomSource
 
