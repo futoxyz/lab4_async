@@ -1,70 +1,120 @@
-from src.source import RandomSource, TaskGiver
+from src.source import RandomSource
 from src.constants import COMMANDS, STATUS_LIST
 from src.queue import TaskQueue
-from src.exceptions import StatusError
+from src.executor import TaskExecutor
+from src.handlers import GeneratorHandler
+from src.exceptions import StatusError, TaskError, IntegerError
 import asyncio
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
 
 
-async def main() -> None:
-    print(f"Available commands:\n- {"\n- ".join(COMMANDS)}")
+def task_table(tasks, title):
+    table = Table(title=title, show_header=True, header_style="bold")
+    table.add_column("ID", justify="center")
+    table.add_column("Description", justify="center")
+    table.add_column("Status", justify="center")
+    table.add_column("Priority", justify="center")
+
+    for t in tasks:
+        match t.status:
+            case "pending":
+                status_color = "yellow"
+            case "completed":
+                status_color = "green"
+            case "failed":
+                status_color = "red"
+            case "in_progress":
+                status_color = "cyan"
+        
+        table.add_row(
+            t.id, 
+            t.description, 
+            f"[{status_color}]{t.status}[/{status_color}]", 
+            str(t.priority)
+        )
+    return table
+
+async def main():
     task_queue = TaskQueue()
-    while inp := input():
-        if inp not in COMMANDS:
-            continue
+    executor = TaskExecutor(task_queue, max_workers=3)
+    executor.register_handler("default", GeneratorHandler())
+
+    console.print(Panel.fit(
+        f"Available commands: [bold cyan]{', '.join(COMMANDS)}[/bold cyan]",
+        title="Task manager"
+    ))
+
+    while True:
+        inp = await asyncio.to_thread(input, ">>> ")
+        if not inp: continue
+        if inp == "exit":
+            if executor._running: await executor.stop()
+            break
+
         match inp:
             case "add-task":
-                task_rnd = RandomSource(1)
-                if isinstance(task_rnd, TaskGiver):
-                    new_task = await task_rnd.get_tasks() 
-                    task_queue.add_task(new_task)
-                    print("Initiated task with generator")
+                source = RandomSource(amount=1)
+                new_task = await source.get_tasks()
+                new_task.task_type = "default"
+                await task_queue.add(new_task)
+                console.print(f"[green]✔[/green] Task {new_task.id} added to queue.")
+            
+            case "add-many-tasks":
+                source = RandomSource(amount=25)
+                new_task = await source.get_tasks()
+                for t in new_task:
+                    t.task_type = "default"
+                    await task_queue.add(t)
+                    console.print(f"[green]✔[/green] Task {t.id} added to queue.")
+
+            case "executor":
+                if not executor._running:
+                    await executor.start()
+                    console.print("[bold green]STARTING EXECUTOR[/bold green] (3 workers)...")
+                else:
+                    console.print("[yellow]![/yellow] Executor is already running.")
 
             case "show-tasks":
-                if not task_queue:
-                    print("No active tasks")
-                else:
-                    for task in task_queue:
-                        print(f"{task.id}: {task.description}. Priority: {task.priority}, Status: {task.status}")
+                console.print(task_table(list(task_queue), "ACTIVE QUEUE"))
+                console.print(task_table(executor.history, "COMPLETED TASKS"))
 
             case "change-task-status":
-                id = str(input("Enter the task id: "))
-                task = task_queue.find(id)
-                if task:
-                    task.status = str(input("Enter new status: "))
-                    print("Status updated")
-                else:
-                    raise ValueError("No such task")
+                tid = await asyncio.to_thread(input, "Task ID: ")
+                task = next((t for t in task_queue if t.id == tid), None)
+                if not task: raise TaskError(tid, type=0)
+                new_status = await asyncio.to_thread(input, f"New Status ({', '.join(STATUS_LIST)}): ")
+                task.status = new_status
+                console.print(f"[green]✔[/green] Status updated to {new_status}")
 
             case "available-statuses":
-                print(", ".join(STATUS_LIST))
+                console.print(f"Available: [bold]{', '.join(STATUS_LIST)}[/bold]")
 
             case "find-task":
-                id = str(input("Enter the id: "))
-                task = task_queue.find(id)
+                tid = await asyncio.to_thread(input, "Enter ID: ")
+                task = next((t for t in list(task_queue) + executor.history if t.id == tid), None)
                 if task:
-                    print(f"{task.id}: {task.description}. Priority: {task.priority}, Status: {task.status}")
+                    console.print(Panel(f"ID: {task.id}\nDesc: {task.description}\nStatus: {task.status}\nPriority: {task.priority}", title=task.id))
                 else:
-                    print("Task was not found")
+                    console.print("[red]✘[/red] Task was not found.")
 
             case "filter-by-priority":
-                prio_filter = input("Enter the priority: ")
-                try:
-                    prio_filter = int(prio_filter)
-                except ValueError:
-                    raise ValueError(f"Priority must be integer: \"{prio_filter}\"")
-                for task in task_queue.filter_by_priority(prio_filter):
-                    print(f"{task.id}: {task.description}. Priority: {task.priority}, Status: {task.status}")
+                p = await asyncio.to_thread(input, "Enter priority: ")
+                if not p.isdigit(): raise IntegerError(p, type=0)
+                results = list(task_queue.filter_by_priority(int(p)))
+                console.print(task_table(results, f"Priority: {p}"))
 
             case "filter-by-status":
-                filter_status = str(input("Enter the status: "))
-                if filter_status not in STATUS_LIST:
-                    raise StatusError(filter_status)
-                for task in task_queue.filter_by_status(filter_status):
-                    print(f"{task.id}: {task.description}. Priority: {task.priority}, Status: {task.status}")
-
-            case "exit":
-                return
+                s = await asyncio.to_thread(input, "Enter status: ")
+                if s not in STATUS_LIST: raise StatusError(s)
+                results = list(task_queue.filter_by_status(s))
+                console.print(task_table(results, f"Status: {s}"))
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    console = Console()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        ...
