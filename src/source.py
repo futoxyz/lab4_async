@@ -4,13 +4,14 @@ from typing import runtime_checkable, Protocol
 from os import path
 import logging
 import random
+from asyncio import to_thread
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='srcs.log', level=logging.INFO)
 
 
 @runtime_checkable
 class TaskGiver(Protocol):
-    def get_tasks(self) -> list[Task] | Task:
+    async def get_tasks(self) -> list[Task] | Task:
         ...
 
 
@@ -18,7 +19,7 @@ class APISource:
     def __init__(self, amount: int = 5):
         self.amount = amount
 
-    def get_tasks(self) -> list[Task] | Task:
+    async def get_tasks(self) -> list[Task] | Task:
         tasks = []
         ids = random.sample(range(1000), self.amount+1)
         for i in range(1, self.amount + 1):
@@ -41,7 +42,10 @@ class FileSource:
             raise ValueError("File was not found")
         self.file = path.abspath(file_dir)
 
-    def get_tasks(self) -> list[Task]:
+    async def get_tasks(self) -> list[Task]:
+        return await to_thread(self.read_file) 
+
+    def read_file(self) -> list[Task]:
         '''
         Пример приема данных: Каждая строка - отдельная задача, первое слово - айди, далее описание.
         '''
@@ -78,7 +82,7 @@ class RandomSource:
     def __init__(self, amount: int = 5):
         self.amount = amount
 
-    def get_tasks(self) -> list[Task] | Task:
+    async def get_tasks(self) -> list[Task] | Task:
         tasks = []
         ids = random.sample(range(1000), self.amount+1)
         for i in range(1, self.amount + 1):

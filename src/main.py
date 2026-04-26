@@ -4,7 +4,7 @@ from src.queue import TaskQueue
 from src.exceptions import StatusError
 
 
-def main() -> None:
+async def main() -> None:
     print(f"Available commands:\n- {"\n- ".join(COMMANDS)}")
     task_queue = TaskQueue()
     while inp := input():
@@ -12,9 +12,10 @@ def main() -> None:
             continue
         match inp:
             case "add-task":
-                tasks_rnd = RandomSource(1)
-                if isinstance(tasks_rnd, TaskGiver):
-                    task_queue.add_task(tasks_rnd.get_tasks())
+                task_rnd = RandomSource(1)
+                if isinstance(task_rnd, TaskGiver):
+                    new_task = await task_rnd.get_tasks() 
+                    task_queue.add_task(new_task)
                     print("Initiated task with generator")
 
             case "show-tasks":
@@ -60,6 +61,9 @@ def main() -> None:
                 for task in task_queue.filter_by_status(filter_status):
                     print(f"{task.id}: {task.description}. Priority: {task.priority}, Status: {task.status}")
 
+            case "exit":
+                return
+
 
 if __name__ == "__main__":
-    main()
+    await main()

@@ -1,4 +1,4 @@
-from pytest import raises
+from pytest import raises, mark
 from random import randint, choice, seed
 from src.task import Task
 from src.queue import TaskQueue
@@ -6,11 +6,12 @@ from src.exceptions import TaskError
 from src.source import RandomSource
 
 
-def test_task_queue():
+@mark.asyncio
+async def test_task_queue():
     seed() # Сид генерации
     amount = randint(10,500)
     source = RandomSource(amount)
-    tasks = source.get_tasks()
+    tasks = await source.get_tasks()
 
     collection = TaskQueue()
     for task in tasks:
