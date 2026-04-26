@@ -42,18 +42,22 @@ class Task:
     id = StrValidation("_id")
     description = StrValidation("_payload")
     priority = PositiveInteger("_priority")
+    task_type = StrValidation("_task_type")
 
     def __init__(
             self,
             id: str,
             description: str,
-            priority: int = 0,
+            task_type: str,
+            priority: int = 0
+            
     ):
         self.id = id
         self.description = description
         self.priority = priority
         self.created_at = datetime.now()
         self._status = "pending"
+        self.task_type = task_type
 
     @property
     def status(self) -> str:
