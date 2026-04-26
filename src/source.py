@@ -11,7 +11,7 @@ logging.basicConfig(filename='srcs.log', level=logging.INFO)
 
 @runtime_checkable
 class TaskGiver(Protocol):
-    async def get_tasks(self) -> list[Task] | Task:
+    async def get_tasks(self) -> list[Task]:
         ...
 
 
@@ -19,13 +19,14 @@ class APISource:
     def __init__(self, amount: int = 5):
         self.amount = amount
 
-    async def get_tasks(self) -> list[Task] | Task:
+    async def get_tasks(self) -> list[Task]:
         tasks = []
         ids = random.sample(range(1000), self.amount+1)
         for i in range(1, self.amount + 1):
             current_task = Task(
                 id=f"task_{ids[i]}",
                 description=random.choice(DESCRIPTIONS),
+                task_type='api',
                 priority=random.randint(0, 10)
             )
             tasks.append(current_task)
@@ -58,6 +59,7 @@ class FileSource:
                     current_task = Task(
                         id=id,
                         description=description,
+                        task_type='file',
                         priority=i
                     )
                     tasks.append(current_task)
@@ -82,13 +84,14 @@ class RandomSource:
     def __init__(self, amount: int = 5):
         self.amount = amount
 
-    async def get_tasks(self) -> list[Task] | Task:
+    async def get_tasks(self) -> list[Task]:
         tasks = []
         ids = random.sample(range(1000), self.amount+1)
         for i in range(1, self.amount + 1):
             current_task = Task(
                 id=f"task_{ids[i]}",
                 description=random.choice(DESCRIPTIONS),
+                task_type='gen',
                 priority=random.randint(0, 10)
             )
             tasks.append(current_task)
