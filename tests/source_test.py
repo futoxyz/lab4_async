@@ -21,8 +21,10 @@ async def test_generator_api() -> None:
 
     for task in tasks_gen:
         assert isinstance(task, task_ref.Task)
+        assert task.task_type == 'gen'
     for task in tasks_api:
         assert isinstance(task, task_ref.Task)
+        assert task.task_type == 'api'
 
     assert len(tasks_gen) == first
     assert len(tasks_api) == second
