@@ -2,6 +2,7 @@ from src.source import RandomSource, TaskGiver
 from src.constants import COMMANDS, STATUS_LIST
 from src.queue import TaskQueue
 from src.exceptions import StatusError
+import asyncio
 
 
 async def main() -> None:
@@ -66,4 +67,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    await main()
+    asyncio.run(main())
