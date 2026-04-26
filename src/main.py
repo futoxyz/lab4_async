@@ -83,7 +83,8 @@ async def main():
             case "change-task-status":
                 tid = await asyncio.to_thread(input, "Task ID: ")
                 task = next((t for t in task_queue if t.id == tid), None)
-                if not task: raise TaskError(tid, type=0)
+                if not task: 
+                    raise TaskError(tid, 0)
                 new_status = await asyncio.to_thread(input, f"New Status ({', '.join(STATUS_LIST)}): ")
                 task.status = new_status
                 console.print(f"[green]✔[/green] Status updated to {new_status}")
@@ -101,13 +102,15 @@ async def main():
 
             case "filter-by-priority":
                 p = await asyncio.to_thread(input, "Enter priority: ")
-                if not p.isdigit(): raise IntegerError(p, type=0)
+                if not p.isdigit(): 
+                    raise IntegerError(p, 0)
                 results = list(task_queue.filter_by_priority(int(p)))
                 console.print(task_table(results, f"Priority: {p}"))
 
             case "filter-by-status":
                 s = await asyncio.to_thread(input, "Enter status: ")
-                if s not in STATUS_LIST: raise StatusError(s)
+                if s not in STATUS_LIST: 
+                    raise StatusError(s)
                 results = list(task_queue.filter_by_status(s))
                 console.print(task_table(results, f"Status: {s}"))
 
