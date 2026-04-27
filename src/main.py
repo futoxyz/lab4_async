@@ -42,12 +42,12 @@ async def main():
     executor.register_handler("default", GeneratorHandler())
 
     console.print(Panel.fit(
-        f"Available commands: [bold cyan]{', '.join(COMMANDS)}[/bold cyan]",
+        f"Available commands: [bold]{', '.join(COMMANDS)}[/bold]",
         title="Task manager"
     ))
 
     while True:
-        inp = await asyncio.to_thread(input, ">>> ")
+        inp = await asyncio.to_thread(input, "> ")
         if not inp:
             continue
         if inp == "exit":
@@ -59,7 +59,8 @@ async def main():
             case "add-task":
                 source = RandomSource(amount=1)
                 new_task = await source.get_tasks()
-                new_task.task_type = "default"
+                new_task = new_task[0]
+                new_task.task_type = "gen"
                 await task_queue.add(new_task)
                 console.print(f"[green]✔[/green] Task {new_task.id} added to queue.")
 
@@ -67,20 +68,20 @@ async def main():
                 source = RandomSource(amount=25)
                 new_task = await source.get_tasks()
                 for t in new_task:
-                    t.task_type = "default"
+                    t.task_type = "gen"
                     await task_queue.add(t)
                     console.print(f"[green]✔[/green] Task {t.id} added to queue.")
 
             case "executor":
                 if not executor._running:
                     await executor.start()
-                    console.print("[bold green]STARTING EXECUTOR[/bold green] (3 workers)...")
+                    console.print("[bold green]Executor started[/bold green]")
                 else:
-                    console.print("[yellow]![/yellow] Executor is already running.")
+                    console.print("[bold yellow]Executor is already running[/bold yellow]")
 
             case "show-tasks":
-                console.print(task_table(list(task_queue), "ACTIVE QUEUE"))
-                console.print(task_table(executor.history, "COMPLETED TASKS"))
+                console.print(task_table(list(task_queue), "Task queue"))
+                console.print(task_table(executor.history, "Finished tasks"))
 
             case "change-task-status":
                 tid = await asyncio.to_thread(input, "Task ID: ")
@@ -107,13 +108,19 @@ async def main():
                 if not p.isdigit():
                     raise IntegerError(p, 0)
                 results = list(task_queue.filter_by_priority(int(p)))
+                for t in executor.history:
+                    if t.priority == p:
+                        results.append(t)
                 console.print(task_table(results, f"Priority: {p}"))
 
             case "filter-by-status":
                 s = await asyncio.to_thread(input, "Enter status: ")
                 if s not in STATUS_LIST:
                     raise StatusError(s)
-                results = list(task_queue.filter_by_status(s))
+                results = list((task_queue).filter_by_status(s))
+                for t in executor.history:
+                    if t.status == s:
+                        results.append(t)
                 console.print(task_table(results, f"Status: {s}"))
 
 
