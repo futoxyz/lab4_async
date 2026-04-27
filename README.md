@@ -59,6 +59,8 @@ TaskQueue — класс с поддержкой итерации базовых
 # Функция main
 Доступны 10 команд: `add-task`, `add-many-tasks`, `show-tasks`, `change-task-status`, `executor`, `available-statuses`, `find-task,` `filter-by-priority`, `filter-by-status`, `exit`
 
+Таски создаются генератором, после старта `executor` они начнут выполняться.
+
 Работает с очередью задач. создаются через генератор, ошибки ввода попадаются валидаторами.
 
 # Логгирование
