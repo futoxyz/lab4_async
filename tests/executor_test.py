@@ -23,10 +23,10 @@ async def test_executor():
     for_fail = Task(id="task_2", description="must fail", task_type="gen")
     await queue.add(normal_task)
     await queue.add(for_fail)
-    
+
     async with executor:
         await asyncio.sleep(3.1)
-        
+
     assert normal_task.status == "completed"
     assert for_fail.status == "failed"
 
@@ -38,13 +38,13 @@ async def test_multiple_handlers():
     executor.register_handler("file", FileHandler())
     t1 = Task("t1", "desc", task_type="api")
     t2 = Task("t2", "desc", task_type="file")
-    
+
     await queue.add(t1)
     await queue.add(t2)
-    
+
     async with executor:
         await asyncio.sleep(3.1)
-        
+
     assert t1.status == "completed"
     assert t2.status == "completed"
 
@@ -54,7 +54,7 @@ async def test_bad_task_type():
     executor = TaskExecutor(queue, max_workers=1)
     task = Task("t_unknown", "desc", task_type="wrong")
     await queue.add(task)
-    
+
     async with executor:
         await asyncio.sleep(3.1)
 

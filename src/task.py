@@ -50,7 +50,7 @@ class Task:
             description: str,
             task_type: str,
             priority: int = 0
-            
+
     ):
         self.id = id
         self.description = description

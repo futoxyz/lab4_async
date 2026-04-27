@@ -27,11 +27,11 @@ def task_table(tasks, title):
                 status_color = "red"
             case "in_progress":
                 status_color = "cyan"
-        
+
         table.add_row(
-            t.id, 
-            t.description, 
-            f"[{status_color}]{t.status}[/{status_color}]", 
+            t.id,
+            t.description,
+            f"[{status_color}]{t.status}[/{status_color}]",
             str(t.priority)
         )
     return table
@@ -48,9 +48,11 @@ async def main():
 
     while True:
         inp = await asyncio.to_thread(input, ">>> ")
-        if not inp: continue
+        if not inp:
+            continue
         if inp == "exit":
-            if executor._running: await executor.stop()
+            if executor._running:
+                await executor.stop()
             break
 
         match inp:
@@ -60,7 +62,7 @@ async def main():
                 new_task.task_type = "default"
                 await task_queue.add(new_task)
                 console.print(f"[green]✔[/green] Task {new_task.id} added to queue.")
-            
+
             case "add-many-tasks":
                 source = RandomSource(amount=25)
                 new_task = await source.get_tasks()
@@ -83,7 +85,7 @@ async def main():
             case "change-task-status":
                 tid = await asyncio.to_thread(input, "Task ID: ")
                 task = next((t for t in task_queue if t.id == tid), None)
-                if not task: 
+                if not task:
                     raise TaskError(tid, 0)
                 new_status = await asyncio.to_thread(input, f"New Status ({', '.join(STATUS_LIST)}): ")
                 task.status = new_status
@@ -102,14 +104,14 @@ async def main():
 
             case "filter-by-priority":
                 p = await asyncio.to_thread(input, "Enter priority: ")
-                if not p.isdigit(): 
+                if not p.isdigit():
                     raise IntegerError(p, 0)
                 results = list(task_queue.filter_by_priority(int(p)))
                 console.print(task_table(results, f"Priority: {p}"))
 
             case "filter-by-status":
                 s = await asyncio.to_thread(input, "Enter status: ")
-                if s not in STATUS_LIST: 
+                if s not in STATUS_LIST:
                     raise StatusError(s)
                 results = list(task_queue.filter_by_status(s))
                 console.print(task_table(results, f"Status: {s}"))

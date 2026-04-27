@@ -19,9 +19,9 @@ class TaskExecutor:
         self.max_workers = max_workers
         self.handlers: dict[str, TaskHandler] = {}
         self._running = False
-        self._workers = []
-        self.history = []
-    
+        self._workers: list[int] = []
+        self.history: list[Task] = []
+
     def register_handler(self, task_type: str, handler: TaskHandler):
         if not isinstance(handler, TaskHandler):
             raise TypeError(f"{task_type} handler does not implement protocol")
@@ -32,23 +32,22 @@ class TaskExecutor:
         while self._running:
             try:
                 task = await self.queue.get()
-                task_type = getattr(task, 'task_type', 'default') 
+                task_type = getattr(task, 'task_type', 'default')
                 handler = self.handlers.get(task_type)
 
                 if handler:
                     await handler.handle(task)
-                    self.history.append(task) 
+                    self.history.append(task)
                     logger.info(f"Worker {worker_id} finished task {task.id}")
                 else:
                     logger.warning(f"No handler for type: {task_type}")
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {e}", exc_info=True)
-    
+
     async def start(self):
         self._running = True
         self._workers = [
-            asyncio.create_task(self._worker(i)) 
-            for i in range(self.max_workers)
+            asyncio.create_task(self._worker(i)) for i in range(self.max_workers)
         ]
 
     async def stop(self):

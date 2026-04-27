@@ -31,8 +31,6 @@ class APISource:
             )
             tasks.append(current_task)
             logger.info(f"Initiated {current_task.id} with API, description \"{current_task.description}\' and priority {current_task.priority}")
-        if self.amount == 1:
-            return tasks[0]
         return tasks
 
 
@@ -44,7 +42,7 @@ class FileSource:
         self.file = path.abspath(file_dir)
 
     async def get_tasks(self) -> list[Task]:
-        return await to_thread(self.read_file) 
+        return await to_thread(self.read_file)
 
     def read_file(self) -> list[Task]:
         '''
@@ -96,6 +94,4 @@ class RandomSource:
             )
             tasks.append(current_task)
             logger.info(f"Initiated {current_task.id} with generator, description \"{current_task.description}\' and priority {current_task.priority}")
-        if self.amount == 1:
-            return tasks[0]
         return tasks

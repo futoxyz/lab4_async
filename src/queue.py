@@ -7,9 +7,9 @@ from typing import Deque
 
 class TaskQueue:
     def __init__(self):
-        self._queue: Deque[dict] = deque()
+        self._queue: Deque[Task] = deque()
         self._condition = asyncio.Condition()
-    
+
     def __iter__(self):
         return iter(list(self._queue))
 
@@ -17,23 +17,23 @@ class TaskQueue:
         async with self._condition:
             self._queue.append(task)
             self._condition.notify()
-    
+
     async def get(self) -> Task:
         async with self._condition:
             while not self._queue:
                 await self._condition.wait()
-            return self._queue.popleft()    
+            return self._queue.popleft()
 
     def filter_by_priority(self, priority: int):
         for task in self._queue:
             if task.priority == priority:
                 yield task
-    
+
     def filter_by_date(self, min_date: datetime):
         for task in self._queue:
             if task.created_at >= min_date:
                 yield task
-    
+
     def filter_by_days(self, days: int):
         for task in self:
             if (datetime.now() - task.created_at).days <= days:
